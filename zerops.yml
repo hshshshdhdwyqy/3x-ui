@@ -1,29 +1,14 @@
-# zerops.yml - پنل سنایی (3x-ui) روی Zerops
-# این فایل را در ریشه ریپوی GitHub بگذارید (اسم فایل دقیقا zerops.yml)
-# اسم سرویس در داشبورد Zerops باید با setup یکی باشد: app
-#
-# نکته: باینری 3x-ui با glibc ساخته شده، پس باید ubuntu باشد نه alpine
-
 zerops:
   - setup: app
-
-    build:
-      base: ubuntu@24.04
-      buildCommands:
-        - curl -L -o x-ui.tar.gz https://github.com/MHSanaei/3x-ui/releases/latest/download/x-ui-linux-amd64.tar.gz
-        - tar -xzf x-ui.tar.gz
-        - chmod +x x-ui/x-ui x-ui/bin/xray-linux-amd64
-      deployFiles: x-ui/~
-
     run:
-      base: ubuntu@24.04
+      base: alpine/docker@26.1.5
+      prepareCommands:
+        - docker image pull ghcr.io/mhsanaei/3x-ui:latest
+      start: >-
+        docker run --network=host
+        -v /var/www/db:/etc/x-ui
+        -v /var/www/cert:/root/cert
+        ghcr.io/mhsanaei/3x-ui:latest
       ports:
         - port: 2053
           httpSupport: true
-      envVariables:
-        XUI_BIN_FOLDER: /var/www/bin
-        XUI_DB_FOLDER: /var/www/db
-        XUI_LOG_FOLDER: /var/www/log
-      prepareCommands:
-        - mkdir -p /var/www/db /var/www/log
-      start: ./x-ui
